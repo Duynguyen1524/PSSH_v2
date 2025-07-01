@@ -92,7 +92,9 @@ void sigchild_handler(int sig) {
                 for (int j = 0; j < job_table[i].npids; j++) {
                     if (job_table[i].pids[j] == pid) {
                         job_number = i;
-                        job_table[i].pids[j] = -1;  // ✅ Mark PID as dead
+                        if (WIFEXITED(status) || WIFSIGNALED(status)) {
+                            job_table[i].pids[j] = -1;
+                        }
                         break;
                     }
                 }
@@ -280,6 +282,7 @@ void execute_tasks(Parse *P,char *cmdline) {
                 exit(EXIT_SUCCESS);
             }
             else if (command_found(P->tasks[j].cmd)) {
+                
                 execvp(P->tasks[j].cmd, P->tasks[j].argv);
                 fprintf(stderr, "pssh: found but can't exec: %s\n", P->tasks[j].cmd);
                 exit(EXIT_FAILURE);
@@ -397,6 +400,7 @@ int main(int argc, char **argv)
                     goto next;
                 }
                 else{
+                    
                     continue_job_in_bg(job_table,job_num);
                     goto next;
                 }
